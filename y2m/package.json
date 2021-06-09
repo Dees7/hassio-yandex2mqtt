@@ -10,7 +10,7 @@
     "Dmitry Parkhonin (https://github.com/dparhonin)"
   ],
   "scripts": {
-    "start": "node app.js"
+    "start": "/opt/yandex2mqtt/bin/node app.js"
   },
   "dependencies": {
     "@poziworld/oauth2orize": "^1.11.1",

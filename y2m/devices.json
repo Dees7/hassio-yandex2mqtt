@@ -1,171 +1,411 @@
 [
   {
-    "name": "Сервант",
-    "room": "Кухня",
-    "type": "devices.types.switch",
-    "mqtt": [
-      {
-        "type": "devices.capabilities.on_off",
-        "publish": "zigbee2mqtt/0x00158d0003xxxxxx/set",
-        "query": "zigbee2mqtt/0x00158d0003xxxxxx/set",
-        "valueMapRef": "default"
-      }
-    ],
-    "capabilities": [
-      {
-        "type": "devices.capabilities.on_off",
-        "retrievable": true
-      }
-    ]
-  },
-  {
+    "id": "d1c9ac59-18de-4d2d-ac00-98a9775f88af",
     "name": "Свет",
-    "room": "Прихожая",
-    "type": "devices.types.light",
-    "mqtt": [
-      {
-        "type": "devices.capabilities.on_off",
-        "publish": "yandex/devices/hallCeilingLamp/set",
-        "query": "yandex/devices/hallCeilingLamp/set"
-      }
-    ],
-    "capabilities": [
-      {
-        "type": "devices.capabilities.on_off",
-        "retrievable": true
-      }
-    ]
-  },
-  {
-    "name": "Свет",
+    "description": "Свет в спальне",
     "room": "Спальня",
     "type": "devices.types.light",
-    "mqtt": [
-      {
-        "type": "devices.capabilities.on_off",
-        "publish": "yandex/devices/bedroomCeilingLamp/set",
-        "query": "yandex/devices/bedroomCeilingLamp/set"
-      }
-    ],
     "capabilities": [
       {
         "type": "devices.capabilities.on_off",
-        "retrievable": true
-      }
-    ]
-  },
-  {
-    "name": "Увлажнитель",
-    "description": "Ультразвуковой увлажнитель Xiaomi",
-    "room": "Спальня",
-    "type": "devices.types.humidifier",
-    "capabilities": [
-      {
-        "type": "devices.capabilities.on_off",
-        "retrievable": true
-      },
-      {
-        "type": "devices.capabilities.mode",
         "retrievable": true,
         "parameters": {
-          "instance": "fan_speed",
-          "modes": [
-            { "value": "low" },
-            { "value": "medium" },
-            { "value": "high" },
-            { "value": "auto" }
-          ]
+          "instance": "on"
+        },
+        "state": {
+          "publish": "cmnd/bedroom/POWER1",
+          "query": "stat/bedroom/POWER1"
         }
       }
     ],
     "properties": [
       {
         "type": "devices.properties.float",
-        "retrievable": true,
         "parameters": {
+          "local": "BME680.Temperature",
           "instance": "temperature",
           "unit": "unit.temperature.celsius"
         }
       },
       {
         "type": "devices.properties.float",
-        "retrievable": "true",
         "parameters": {
+          "local": "BME680.Pressure",
+          "instance": "pressure",
+          "unit": "unit.pressure.mmhg"
+        }
+      },
+      {
+        "type": "devices.properties.float",
+        "parameters": {
+          "local": "BME680.Gas",
+          "instance": "co2_level",
+          "unit": "unit.ppm"
+        }
+      },
+      {
+        "type": "devices.properties.float",
+        "parameters": {
+          "local": "BME680.Humidity",
           "instance": "humidity",
           "unit": "unit.percent"
         }
       }
     ],
     "complexState": {
-      "publish": "yandex/devices/bedroomHumidifier/set",
-      "query": "yandex/devices/bedroomHumidifier/get"
+      "query": "telemetry/tele/tasmota_3533A3/SENSOR"
     }
   },
   {
-		"name": "Кондиционер",
-		"description": "Кондиционер Haier в спальне",
-		"room": "Спальня",
-		"type": "devices.types.thermostat.ac",
-		"capabilities": [
-			{
-				"type": "devices.capabilities.on_off"
-			},
-			{
-				"type": "devices.capabilities.range",
-				"retrievable": "true",
-				"parameters": {
-					"instance": "temperature",
-					"unit": "unit.temperature.celsius",
-					"range": {
-						"min": 16,
-						"max": 30
-					}
-				}
-			},
-			{
-				"type": "devices.capabilities.mode",
-				"parameters": {
-					"instance": "fan_speed",
-					"modes": [
-						{ "value": "low" },
-						{ "value": "medium" },
-						{ "value": "high" },
-						{ "value": "auto" }
-					]
-				},
-				"mappingRef": "haierFanSpeed"
-			},
-			{
-				"type": "devices.capabilities.mode",
-				"parameters": {
-					"instance": "swing",
-					"modes": [
-						{ "value": "auto" },
-						{ "value": "horizontal" },
-						{ "value": "stationary" },
-						{ "value": "vertical" }
-					]
-				},
-				"mappingRef": "haierSwing"
-			},
-			{
-				"type": "devices.capabilities.mode",
-				"parameters": {
-					"instance": "thermostat",
-					"modes": [
-						{ "value": "auto" },
-						{ "value": "cool" },
-						{ "value": "dry" },
-						{ "value": "fan_only" },
-						{ "value": "heat" }
-					]
-				},
-				"mappingRef": "haierThermostat"
-			}
-		],
-		"complexState": {
-			"publish": "yandex/devices/bedroom/ac/set",
-			"query": "yandex/devices/bedroom/ac/get"
-		}
-	}
+    "id": "77615327-512d-426d-a7a8-5f414c853e09",
+    "name": "Пол",
+    "room": "Балкон",
+    "type": "devices.types.thermostat",
+    "capabilities": [
+      {
+        "type": "devices.capabilities.on_off",
+        "retrievable": true,
+        "parameters": {
+          "instance": "on",
+          "split": false
+        },
+        "state": {
+          "publish": "cmnd/balcony/MEM1",
+          "query": "cmnd/balcony/MEM1"
+        }
+      },
+      {
+        "type": "devices.capabilities.toggle",
+        "retrievable": true,
+        "parameters": {
+          "instance": "keep_warm"
+        },
+        "state": {
+          "publish": "cmnd/balcony/MEM16",
+          "query": "cmnd/balcony/MEM16"
+        }
+      },
+      {
+        "type": "devices.capabilities.range",
+        "parameters": {
+          "local": "MEM2",
+          "instance": "temperature",
+          "unit": "unit.temperature.celsius",
+          "range": {
+            "min": 15,
+            "max": 37
+          }
+        },
+        "state": {
+          "publish": "cmnd/balcony/MEM2",
+          "query": "cmnd/balcony/MEM2"
+        }
+      }
+    ],
+    "properties": [
+      {
+        "type": "devices.properties.float",
+        "parameters": {
+          "local": "DS18B20.Temperature",
+          "instance": "temperature",
+          "unit": "unit.temperature.celsius"
+        }
+      },
+      {
+        "type": "devices.properties.float",
+        "parameters": {
+          "local": "battery",
+          "instance": "battery_level",
+          "unit": "unit.percent"
+        },
+        "state": {
+          "query": "ble/json/BALKONY/181a"
+        }
+      }
+    ],
+    "complexState": {
+      "query": "tele/balcony/SENSOR"
+    }
+  },
+  {
+    "id": "21e90282-10bb-4b61-ba29-cf48cec4ec63",
+    "name": "Свет",
+    "description": "Свет в коридоре",
+    "room": "Коридор",
+    "type": "devices.types.light",
+    "capabilities": [
+      {
+        "type": "devices.capabilities.on_off",
+        "retrievable": true,
+        "parameters": {
+          "instance": "on"
+        },
+        "state": {
+          "publish": "cmnd/hall/POWER1",
+          "query": "stat/hall/POWER1"
+        }
+      }
+    ],
+    "properties": [
+      {
+        "type": "devices.properties.float",
+        "parameters": {
+          "local": "temp",
+          "instance": "temperature",
+          "unit": "unit.temperature.celsius"
+        }
+      },
+      {
+        "type": "devices.properties.float",
+        "parameters": {
+          "local": "humidity",
+          "instance": "humidity",
+          "unit": "unit.percent"
+        }
+      },
+      {
+        "type": "devices.properties.float",
+        "parameters": {
+          "local": "battery",
+          "instance": "battery_level",
+          "unit": "unit.percent"
+        }
+      },
+      {
+        "type": "devices.properties.float",
+        "parameters": {
+          "local": "battery_voltage",
+          "instance": "voltage",
+          "unit": "unit.volt"
+        }
+      }
+    ],
+    "complexState": {
+      "query": "ble/json/HALL/181a"
+    }
+  },
+  {
+    "id": "68608774-a311-4dec-a0c6-75af6934e4f8",
+    "name": "Ночник",
+    "description": "RGB Светильник",
+    "room": "Кухня",
+    "type": "devices.types.light",
+    "capabilities": [
+      {
+        "type": "devices.capabilities.on_off",
+        "retrievable": true,
+        "parameters": {
+          "local": "state",
+          "instance": "on"
+        },
+        "state": {
+          "value": false
+        },
+        "mappingRef": "rgbstate"
+      },
+      {
+        "type": "devices.capabilities.color_setting",
+        "retrievable": true,
+        "parameters": {
+          "local": "color",
+          "color_model": "rgb",
+          "instance": "rgb",
+          "color_scene_disabled": {
+            "scenes": [
+              {
+                "id": "alarm"
+              },
+              {
+                "id": "night"
+              }
+            ]
+          }
+        },
+        "mappingRef": "rgb"
+      }
+    ],
+    "properties": [],
+    "complexState": {
+      "publish": "lumi/light/set",
+      "query": "lumi/light"
+    }
+  },
+  {
+    "id": "f59ee36f-573a-44a7-b15b-8ba4155e4eda",
+    "name": "Свет",
+    "description": "Свет на балконе",
+    "room": "Балкон",
+    "type": "devices.types.light",
+    "capabilities": [
+      {
+        "type": "devices.capabilities.on_off",
+        "retrievable": true,
+        "parameters": {
+          "instance": "on"
+        },
+        "state": {
+          "publish": "cmnd/wall/POWER1",
+          "query": "stat/wall/POWER1"
+        }
+      }
+    ],
+    "properties": []
+  },
+  {
+    "id": "a921fcf4-56dc-4f5c-b753-b128d33413b5",
+    "name": "Свет",
+    "description": "Свет в кухне",
+    "room": "Кухня",
+    "type": "devices.types.light",
+    "capabilities": [
+      {
+        "type": "devices.capabilities.on_off",
+        "retrievable": true,
+        "parameters": {
+          "instance": "on"
+        },
+        "state": {
+          "publish": "cmnd/kitchen/POWER1",
+          "query": "stat/kitchen/POWER1"
+        }
+      }
+    ],
+    "properties": []
+  },
+  {
+    "id": "fae2afd8-c108-417b-87e0-48f3eef62929",
+    "name": "Вытяжка",
+    "description": "Вытяжка в ванной",
+    "room": "Ванная",
+    "type": "devices.types.switch",
+    "capabilities": [
+      {
+        "type": "devices.capabilities.on_off",
+        "retrievable": true,
+        "parameters": {
+          "instance": "on"
+        },
+        "state": {
+          "publish": "cmnd/bathroom/POWER1",
+          "query": "stat/bathrooom/POWER1"
+        }
+      }
+    ],
+    "properties": [
+      {
+        "type": "devices.properties.float",
+        "parameters": {
+          "local": "BME280.Temperature",
+          "instance": "temperature",
+          "unit": "unit.temperature.celsius"
+        }
+      },
+      {
+        "type": "devices.properties.float",
+        "parameters": {
+          "local": "BME280.Humidity",
+          "instance": "humidity",
+          "unit": "unit.percent"
+        }
+      }
+    ],
+    "complexState": {
+      "publish": "cmnd/bathroom/backlog",
+      "query": "tele/bathroom/SENSOR"
+    }
+  },
+  {
+    "id": "3c4f8f2e-067b-4ef2-bdfb-15e3f4cc00a5",
+    "name": "Климат",
+    "room": "Снаружи",
+    "type": "devices.types.sensor",
+    "capabilities": [],
+    "properties": [
+      {
+        "type": "devices.properties.float",
+        "parameters": {
+          "local": "BME280.Temperature",
+          "instance": "temperature",
+          "unit": "unit.temperature.celsius"
+        }
+      },
+      {
+        "type": "devices.properties.float",
+        "parameters": {
+          "local": "BME280.Pressure",
+          "instance": "pressure",
+          "unit": "unit.pressure.mmhg"
+        }
+      },
+      {
+        "type": "devices.properties.float",
+        "parameters": {
+          "local": "BME280.Humidity",
+          "instance": "humidity",
+          "unit": "unit.percent"
+        }
+      }
+    ],
+    "complexState": {
+      "publish": "cmnd/weather/backlog",
+      "query": "tele/weather/SENSOR"
+    }
+  },
+  {
+    "id": "ad7dadf3-4432-4c3e-b2ea-d051d3292c4f",
+    "name": "Вытяжка",
+    "description": "Вытяжка на кухне",
+    "room": "Кухня",
+    "type": "devices.types.switch",
+    "capabilities": [
+      {
+        "type": "devices.capabilities.on_off",
+        "retrievable": true,
+        "parameters": {
+          "instance": "on"
+        },
+        "state": {
+          "publish": "cmnd/bathroom/POWER2",
+          "query": "stat/bathrooom/POWER2"
+        }
+      }
+    ],
+    "properties": [
+      {
+        "type": "devices.properties.float",
+        "parameters": {
+          "local": "temp",
+          "instance": "temperature",
+          "unit": "unit.temperature.celsius"
+        }
+      },
+      {
+        "type": "devices.properties.float",
+        "parameters": {
+          "local": "humidity",
+          "instance": "humidity",
+          "unit": "unit.percent"
+        }
+      },
+      {
+        "type": "devices.properties.float",
+        "parameters": {
+          "local": "battery",
+          "instance": "battery_level",
+          "unit": "unit.percent"
+        }
+      },
+      {
+        "type": "devices.properties.float",
+        "parameters": {
+          "local": "battery_voltage",
+          "instance": "voltage",
+          "unit": "unit.volt"
+        }
+      }
+    ],
+    "complexState": {
+      "query": "ble/json/KITCHEN/181a"
+    }
+  }
 ]

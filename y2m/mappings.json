@@ -1,9 +1,41 @@
 {
     "default": {
+        "true": "1",
+        "false": "0",
+        "1": "true",
+        "0": "false"
+    },
+    "termostat":{
+        "MEM2":"temperature",
+        "temperature":"MEM2",
+        "1": "true",
+        "0": "false"
+    },
+    "rgbstate":{
         "true": "ON",
         "false": "OFF",
-        "ON": "true",
-        "OFF": "false"
+        "ON": true,
+        "OFF": false
+    },
+    "sensors": {
+        "DS18B20.Temperature": "temperature",
+        "temperature": "DS18B20.Temperature",
+        "BME680.Temperature": "temperature",
+        "temperature": "BME680.Temperature",
+        "BME680.Humidity": "humidity",
+        "humidity": "BME680.Humidity",
+        "BME680.Pressure": "pressure",
+        "pressure": "BME680.Pressure",
+        "BME680.Gas": "co2_level",
+        "co2_level": "BME680.Gas",
+        "BME280.Temperature": "temperature",
+        "temperature": "BME280.Temperature",
+        "BME280.Humidity": "humidity",
+        "humidity": "BME280.Humidity",
+        "BME280.Pressure": "pressure",
+        "pressure": "BME280.Pressure",
+        "BMP280.Temperature": "temperature",
+        "temperature": "BMP280.Temperature"
     },
     "haierFanSpeed": {
         "max": "high",

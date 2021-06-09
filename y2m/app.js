@@ -16,13 +16,13 @@ const fs = require('fs');
 const app = express();
 const https = require('https');
 
-const privateKey = fs.readFileSync(config.https.privateKey, 'utf8');
-const certificate = fs.readFileSync(config.https.certificate, 'utf8');
-const credentials = {
-  key: privateKey,
-  cert: certificate,
-};
-const httpsServer = https.createServer(credentials, app);
+//const privateKey = fs.readFileSync(config.https.privateKey, 'utf8');
+//const certificate = fs.readFileSync(config.https.certificate, 'utf8');
+//const credentials = {
+//  key: privateKey,
+//  cert: certificate,
+//};
+//const httpsServer = https.createServer(credentials, app);
 global.devices = [];
 
 if (config.devices_path) {
@@ -95,8 +95,10 @@ app.post('/provider/v1.0/user/devices/query', routes.user.query);
 app.post('/provider/v1.0/user/devices/action', routes.user.action);
 app.post('/provider/v1.0/user/unlink', routes.user.unlink);
 
-httpsServer.listen(config.https.port);
-debug('HTTPS server started on port %s', config.https.port);
+//httpsServer.listen(config.https.port);
+//debug('HTTPS server started on port %s', config.https.port);
+app.listen(config.http.port);
+debug('HTTP server started on port %s', config.http.port); 
 
 const subscriptions = [];
 global.devices.forEach((device) => {
@@ -105,14 +107,29 @@ global.devices.forEach((device) => {
   if (complexStateQueryTopic) {
     subscriptions.push({
       deviceId: device.data.id,
+      type: "complex",
       topic: complexStateQueryTopic,
     });
   }
+  device.data.properties.forEach((propertiy) => {
+    if (propertiy.state) {
+      const queryTopic = propertiy.state.query || false;
+      if (queryTopic) {
+        subscriptions.push({
+          deviceId: device.data.id,
+          type: propertiy.state.instance,
+          topic: queryTopic,
+          propertiyType: propertiy.type,
+        });
+      }
+    }
+  });  
   device.data.capabilities.forEach((capability) => {
     const queryTopic = capability.state.query || false;
     if (queryTopic) {
       subscriptions.push({
         deviceId: device.data.id,
+        type: "capability",
         topic: queryTopic,
         capabilityType: capability.type,
       });
@@ -133,14 +150,27 @@ client.on('message', (topic, message) => {
   const subscription = subscriptions.find(sub => topic.toLowerCase() === sub.topic.toLowerCase());
   if (!subscription) return;
   const device = global.devices.find(device => device.data.id == subscription.deviceId);
-  if (subscription.capabilityType) {
-    device.updateState(
-      subscription.capabilityType,
-      message.toString().toUpperCase(),
-    );
-  } else {
-    device.updateComplexState(message);
-  }
+  switch (subscription.type) {
+    case 'capability': {
+      device.updateStateC(
+        subscription.capabilityType,
+        message.toString().toLowerCase(),
+      );
+      break;
+    }
+    case 'complex':  {
+      device.updateComplexState(message.toString().toLowerCase());
+      break;
+    }
+    default: {
+      device.updateStateP(
+        subscription.type,
+        message.toString().toLowerCase(),
+      );
+      break;
+    }
+  }  
 });
 
 module.exports = app;
+

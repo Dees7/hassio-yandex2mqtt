@@ -1,5 +1,6 @@
-yandex2mqtt/options.json
-yandex2mqtt/app.js
-yandex2mqtt-private/
-y2m-private/
-backup/
+.devcontainer
+.vscode
+.lh
+y2m/options.json
+y2m/loki.json
+y2m/json.json

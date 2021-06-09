@@ -54,7 +54,7 @@ module.exports.query = [
     };
     for (const i in request.body.devices) {
       debug(`- Querying device ${request.body.devices[i].id}`);
-      r.payload.devices.push(global.devices[request.body.devices[i].id].getState());
+      r.payload.devices.push(global.devices.find(device => device.data.id === request.body.devices[i].id).getState());
     }
     debug(`Query response: ${JSON.stringify(r)}`);
     response.send(r);
@@ -73,7 +73,7 @@ module.exports.action = [
       },
     };
     request.body.payload.devices.forEach((payloadDevice) => {
-      const device = global.devices[payloadDevice.id];
+      const device = global.devices.find(device => device.data.id === payloadDevice.id);
       const capResponses = [];
       payloadDevice.capabilities.forEach((payloadCapability) => {
         capResponses.push(

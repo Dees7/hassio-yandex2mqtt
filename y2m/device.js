@@ -16,39 +16,47 @@ function fixEncoding(str) {
 
 function convertValue(valueMapping, val) {
   let mqttVal;
-  if (!valueMapping) valueMapping="default"
-  if (global.valueMappings[valueMapping]) {
-    debug('Using value mapping: %s', valueMapping);
-    mqttVal = global.valueMappings[valueMapping][val];
-    debug('Value mapped: %s -> %s', val, mqttVal);
+  if (valueMapping == "rgb") {
+      var col_r=(val >> 16)&0xff;
+      var col_g=(val >> 8)&0xff;
+      var col_b= val &0xff;
+      mqttVal={"r":col_r,"g":col_g,"b":col_b};
   } else {
-    if (valueMapping) {
-      debug(`Config error: unknown value mapping: ${valueMapping}`);
+    if (!valueMapping) valueMapping="default"
+    if (global.valueMappings[valueMapping]) {
+      debug('Using value mapping: %s', valueMapping);
+      mqttVal = global.valueMappings[valueMapping][val];
+      debug('Value mapped: %s -> %s', val, mqttVal);
+      if ( typeof mqttVal === 'undefined' ) { 
+        mqttVal = val;
+        debug('Mapping undefined using value %s', val);
+      }
+    } else {
+      if (valueMapping) {
+        debug(`Config error: unknown value mapping: ${valueMapping}`);
+      }
+      mqttVal = `${val}`;
     }
-    mqttVal = `${val}`;
   }
   return mqttVal;
 }
 
-function convertYandexValueToString(val, capabilityType, instance) {
-  switch (instance) {
-//        case 'on':
-//            return val? "true": "false";
-    default:
-      return val;
+function getDataByPath(data, path) {
+     path.split(".").forEach(element => data=data[element]);
+     return data;
   }
-}
 
 function convertToYandexValue(val, type, instance) {
   if (type.startsWith('devices.capabilities.')) {
     const capType = type.slice(21);
     switch (capType) {
+      case 'toggle':
       case 'on_off': {
         if (val == null) return false;
         val = `${val}`;
         switch (val.toLowerCase()) {
           case 'true':
-          case 'ON':
+          case 'on':
           case '1':
             return true;
           default:
@@ -65,12 +73,9 @@ function convertToYandexValue(val, type, instance) {
         }
       }
       case 'color_setting': {
-        return val;
+        return val.r*256*256+val.g*256+val.b;
       }
       case 'mode': {
-        return val;
-      }
-      case 'toggle': {
         return val;
       }
       default: {
@@ -100,9 +105,10 @@ function convertToYandexValue(val, type, instance) {
 
 class device {
   constructor(options) {
+    debug(`Creating device: ${options.id}`);
     const id = global.devices.length;
     this.data = {
-      id: String(id),
+      id: options.id || String(id),
       name: fixEncoding(options.name) || 'Без названия',
       description: fixEncoding(options.description) || '',
       room: fixEncoding(options.room) || '',
@@ -112,6 +118,7 @@ class device {
       complexState: options.complexState || {},
     };
     this.data.capabilities.forEach((capability) => {
+      debug(`Creating capability: ${capability.type}`);
       capability.state = this.initState(capability);
     });
     global.devices.push(this);
@@ -133,16 +140,14 @@ class device {
       capDef.parameters = capability.parameters;
       definition.capabilities.push(capDef);
     });
-    if (this.data.properties) {
-      definition.properties = [];
-      this.data.properties.forEach((property) => {
-        const propDef = {};
-        propDef.type = property.type;
-        propDef.retrievable = property.retrievable;
-        propDef.parameters = property.parameters;
-        definition.properties.push(propDef);
-      });
-    }
+    definition.properties = [];
+    this.data.properties.forEach((property) => {
+      const propDef = {};
+      propDef.type = property.type;
+      propDef.retrievable = property.retrievable;
+      propDef.parameters = property.parameters;
+      definition.properties.push(propDef);
+    });
     return definition;
   }
 
@@ -154,11 +159,8 @@ class device {
     this.data.capabilities.forEach((capability) => {
       const capState = {};
       capState.type = capability.type;
-      if (capability.state === undefined) {
-        capState.state = this.initState(capability);
-      } else {
-        capState.state = capability.state;
-      }
+      capState.state = Object.assign({}, capability.state);
+      capState.state.instance=capability.parameters.instance;
       state.capabilities.push(capState);
     });
     if (this.data.properties) {
@@ -166,13 +168,7 @@ class device {
       this.data.properties.forEach((property) => {
         const propState = {};
         propState.type = property.type;
-        if (property.state === undefined) {
-          propState.state = {};
-          propState.state.instance = property.parameters.instance;
-          propState.state.value = 0;
-        } else {
-          propState.state = property.state;
-        }
+        propState.state = property.state;
         state.properties.push(propState);
       });
     }
@@ -182,20 +178,28 @@ class device {
   initState(capability) {
     const state = capability.state || {}; // There can be mqtt publish/query topics configured
     const capType = capability.type.slice(21);
+    state.instance = capability.parameters.instance;
     switch (capType) {
       case 'on_off': {
-        state.instance = 'on';
-        state.value = false;
+        if (!state.value) {
+          state.value = false;
+        }
         break;
       }
+      case 'toggle': {
+        state.value = false;
+        break;
+      }      
       case 'mode': {
-        state.instance = capability.parameters.instance;
         state.value = capability.parameters.modes[0].value;
         break;
       }
       case 'range': {
-        state.instance = capability.parameters.instance;
         state.value = capability.parameters.range.min;
+        break;
+      }
+      case 'color_setting': {
+        state.value = 7207110;
         break;
       }
       default: {
@@ -209,6 +213,11 @@ class device {
   findCapability(type) {
     return this.data.capabilities.find(capability => capability.type === type);
   }
+  
+  findProperty(type) {
+    return this.data.properties.find(property => property.state.instance === type);
+  }
+  
 
   // Кешируем значение, переданное нам Яндексом, и пропихиваем его в MQTT
   setState(type, val, relative) {
@@ -253,11 +262,13 @@ class device {
   // Collects all capability states and construct a complex state that should be sent via MQTT (if required)
   propagateComplexState() {
     const topic = this.data.complexState.publish || false;
+    var val;
     if (topic) {
       const complexState = {};
       this.data.capabilities.forEach((capability) => {
         if (!capability.state.publish) {
-          complexState[capability.state.instance] = capability.state.value;
+          val = convertValue(capability.mappingRef, `${capability.state.value}`);
+          complexState[capability.parameters.local] = val;
         }
       });
       const complexStateStr = JSON.stringify(complexState);
@@ -266,14 +277,34 @@ class device {
     }
   }
 
-  updateState(type, val) {
+  updateStateC(type, val) {
     debug(`Updating cached state for device '${this.data.name}' (ID=${this.data.id})`);
     try {
       const capability = this.findCapability(type);
-      val = convertValue(capability.mappingRef, val);
       val = convertToYandexValue(val, capability.type, capability.state.instance);
       capability.state.value = val;
       debug(`.. updated cached state for device '${this.data.name}' (ID=${this.data.id}): ${val}`);
+    } catch (err) {
+      console.log(err);
+      console.log(`Cannot update capability state for device='${this.data.name
+      }' (ID=${this.data.id}), capability type='${type}'`);
+    }
+  }
+
+  updateStateP(type, val) {
+    debug(`Updating cached state for device '${this.data.name}' (ID=${this.data.id})`);
+    try {
+      debug(`-P Parsing: ${val}`);
+      var StateP = JSON.parse(val);  
+      const property = this.findProperty(type);
+      if (property) {
+        val = getDataByPath(StateP, property.parameters.local.toString().toLowerCase());
+        var instance = property.parameters.instance
+        property.state.instance = instance;
+        val = convertToYandexValue(val, property.type, instance);
+        property.state.value = val;
+        debug(`.. updated cached state for device '${this.data.name}' (ID=${this.data.id}): ${val}`);
+      }
     } catch (err) {
       console.log(err);
       console.log(`Cannot update capability state for device='${this.data.name
@@ -287,7 +318,8 @@ class device {
       const complexState = JSON.parse(complexStateStr);
       this.data.capabilities.forEach((capability) => {
         if (!capability.state.query) {
-          const val = complexState[capability.state.instance];
+          var search=capability.parameters.local||capability.state.instance;
+          const val = getDataByPath(complexState, search.toString().toLowerCase());
           if (val !== undefined) {
             debug(`-- capability[${capability.state.instance}]=${val}`);
             capability.state.value = convertToYandexValue(
@@ -300,11 +332,12 @@ class device {
       });
       if (this.data.properties) {
         this.data.properties.forEach((property) => {
-          const val = complexState[property.parameters.instance];
+          var instance = property.parameters.instance
+          const val = getDataByPath(complexState, property.parameters.local.toString().toLowerCase());
           if (val !== undefined) {
-            debug(`-- property[${property.parameters.instance}]=${val}`);
+            debug(`-- property[${instance}]=${val}`);
             property.state = {};
-            property.state.instance = property.parameters.instance;
+            property.state.instance = instance;
             property.state.value = convertToYandexValue(
               val,
               property.type,

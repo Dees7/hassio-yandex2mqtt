@@ -1,0 +1,42 @@
+{
+  "debug": "y2m.*",
+  "db_path": "./loki.json",
+  "devices_path": "./devices.json",
+  "mappings_path": "./mappings.json",
+
+  "mqtt": {
+      "host": "localhost",
+      "port": "1883",
+      "user": "user",
+      "password": "pass"
+  },
+
+  "https": {
+    "privateKey": "/path/to/privkey.pem",
+    "certificate": "/path/to/fullchain.pem",
+    "port": "8443"
+  },
+
+  "http": {
+      "port": "8080"
+  },
+
+
+  "clients": [
+  {
+      "id": "1",
+      "name": "Yandex",
+      "clientId": "yandex-smarthome-oxip",
+      "clientSecret": "secret",
+      "isTrusted": "false"
+      }
+  ],
+
+  "users": [{
+          "id": "1",
+          "username": "user",
+          "password": "pass",
+          "name": "Username"
+      }
+  ]
+}
